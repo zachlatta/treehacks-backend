@@ -143,6 +143,8 @@ type tugOfWar struct {
 }
 
 func (t *tugOfWar) run(*gameData) {
+	log.Println("~LET'S TUG SOME ROPES~")
+
 	ticker := time.NewTicker(time.Second)
 	secondsRemaining := 5
 
@@ -165,6 +167,8 @@ type shipRace struct {
 }
 
 func (s *shipRace) run(*gameData) {
+	log.Println("~LET'S RACE SOME SHIPS~")
+
 	ticker := time.NewTicker(time.Second)
 	secondsRemaining := 7
 
