@@ -11,7 +11,7 @@ func main() {
 	go h.run()
 	go gm.run()
 	http.HandleFunc("/ws", serveWs)
-	log.Fatal(http.ListenAndServe(":8889", nil))
+	log.Fatal(http.ListenAndServe(":8888", nil))
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	c := &conn{send: make(chan []byte, 256), ws: ws}
+	c := &conn{send: make(chan interface{}, 256), ws: ws}
 	h.register <- c
 	go c.writePump()
 	c.readPump()

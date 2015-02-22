@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 
 type conn struct {
 	ws   *websocket.Conn
-	send chan []byte
+	send chan interface{}
 }
 
 func (c *conn) readPump() {
@@ -37,17 +37,29 @@ func (c *conn) readPump() {
 		return nil
 	})
 	for {
-		_, msg, err := c.ws.ReadMessage()
+		msgType, body, err := c.ws.ReadMessage()
 		if err != nil {
 			break
 		}
-		h.broadcast <- msg
+
+		msg := connMsg{
+			conn:        c,
+			messageType: msgType,
+			body:        body,
+		}
+
+		h.incoming <- &msg
 	}
 }
 
 func (c *conn) write(msgType int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(msgType, payload)
+}
+
+func (c *conn) writeJSON(v interface{}) error {
+	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.ws.WriteJSON(v)
 }
 
 func (c *conn) writePump() {
@@ -63,7 +75,7 @@ func (c *conn) writePump() {
 				c.write(websocket.CloseMessage, []byte{})
 				return
 			}
-			if err := c.write(websocket.TextMessage, msg); err != nil {
+			if err := c.writeJSON(msg); err != nil {
 				return
 			}
 		case <-ticker.C:
@@ -72,4 +84,10 @@ func (c *conn) writePump() {
 			}
 		}
 	}
+}
+
+type connMsg struct {
+	conn        *conn
+	messageType int
+	body        []byte
 }
