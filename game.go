@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"time"
 )
 
 type gameManager struct {
@@ -18,8 +19,12 @@ var gm = gameManager{
 
 func (gm *gameManager) run() {
 	go gm.processConns()
-	gm.currentGame = newGame()
-	gm.currentGame.start()
+	for {
+		log.Println("Created new game")
+		gm.currentGame = newGame()
+		gm.currentGame.run()
+		log.Println("Game finished")
+	}
 }
 
 func (gm *gameManager) processConns() {
@@ -34,16 +39,17 @@ func (gm *gameManager) processConns() {
 }
 
 type game struct {
-	state *gameData
-}
-
-func (g *game) start() {
-	log.Println("Starting game")
+	state     *gameData
+	miniGames []miniGame
 }
 
 func newGame() *game {
 	game := game{
 		state: newGameData(),
+		miniGames: []miniGame{
+			&tugOfWar{},
+			&shipRace{},
+		},
 	}
 
 	// Initialize players
@@ -53,6 +59,13 @@ func newGame() *game {
 	}
 
 	return &game
+}
+
+func (g *game) run() {
+	for _, miniGame := range g.miniGames {
+		log.Println("Running minigame")
+		miniGame.run(g.state)
+	}
 }
 
 type gameData struct {
@@ -123,11 +136,49 @@ func newPlayer(c *conn) *player {
 }
 
 type miniGame interface {
-	start(*gameData)
+	run(*gameData)
 }
 
 type tugOfWar struct {
 }
 
-func (t *tugOfWar) start(gm *gameData) {
+func (t *tugOfWar) run(*gameData) {
+	ticker := time.NewTicker(time.Second)
+	secondsRemaining := 5
+
+loop:
+	for {
+		select {
+		case <-ticker.C:
+			secondsRemaining--
+			if secondsRemaining == 0 {
+				break loop
+			}
+			log.Println("Tick", secondsRemaining)
+		}
+	}
+
+	log.Println("Done!")
+}
+
+type shipRace struct {
+}
+
+func (s *shipRace) run(*gameData) {
+	ticker := time.NewTicker(time.Second)
+	secondsRemaining := 7
+
+loop:
+	for {
+		select {
+		case <-ticker.C:
+			secondsRemaining--
+			if secondsRemaining == 0 {
+				break loop
+			}
+			log.Println("Tick", secondsRemaining)
+		}
+	}
+
+	log.Println("Done!")
 }
