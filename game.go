@@ -19,6 +19,7 @@ var gm = gameManager{
 func (gm *gameManager) run() {
 	go gm.processConns()
 	gm.currentGame = newGame()
+	gm.currentGame.start()
 }
 
 func (gm *gameManager) processConns() {
@@ -33,7 +34,7 @@ func (gm *gameManager) processConns() {
 }
 
 type game struct {
-	state *gameState
+	state *gameData
 }
 
 func (g *game) start() {
@@ -42,7 +43,7 @@ func (g *game) start() {
 
 func newGame() *game {
 	game := game{
-		state: newGameState(),
+		state: newGameData(),
 	}
 
 	// Initialize players
@@ -54,20 +55,20 @@ func newGame() *game {
 	return &game
 }
 
-type gameState struct {
+type gameData struct {
 	redTeam  *team
 	blueTeam *team
 }
 
-func newGameState() *gameState {
-	return &gameState{
+func newGameData() *gameData {
+	return &gameData{
 		redTeam:  newTeam(),
 		blueTeam: newTeam(),
 	}
 }
 
 // addPlayerToTeam adds a player to the game state's team with the least players.
-func (s *gameState) addPlayerToTeam(p *player) {
+func (s *gameData) addPlayerToTeam(p *player) {
 	redLen := len(s.redTeam.players)
 	blueLen := len(s.blueTeam.players)
 	if redLen > blueLen {
@@ -77,7 +78,7 @@ func (s *gameState) addPlayerToTeam(p *player) {
 	}
 }
 
-func (s *gameState) removePlayerWithConnFromTeam(c *conn) error {
+func (s *gameData) removePlayerWithConnFromTeam(c *conn) error {
 	removed := false
 	teams := []*team{s.redTeam, s.blueTeam}
 	for _, team := range teams {
@@ -101,7 +102,7 @@ func (s *gameState) removePlayerWithConnFromTeam(c *conn) error {
 }
 
 type team struct {
-	points  int
+	wins    int
 	players map[*player]bool
 }
 
@@ -122,11 +123,11 @@ func newPlayer(c *conn) *player {
 }
 
 type miniGame interface {
-	start(*gameState)
+	start(*gameData)
 }
 
 type tugOfWar struct {
 }
 
-func (t *tugOfWar) start(gm *gameState) {
+func (t *tugOfWar) start(gm *gameData) {
 }

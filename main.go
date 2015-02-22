@@ -6,6 +6,8 @@ import (
 )
 
 func main() {
+	log.Println("Server started...")
+
 	go h.run()
 	go gm.run()
 	http.HandleFunc("/ws", serveWs)
